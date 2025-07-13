@@ -1,0 +1,21 @@
+name: TestMinimal
+description: Minimal test workflow
+input_schema:
+  type: object
+  properties:
+    message:
+      type: string
+  required:
+  - message
+steps:
+- id: test_echo
+  component: langflow://echo_component
+  input:
+    message:
+      $from:
+        input: message
+output:
+  result:
+    $from:
+      step: test_echo
+    path: echo
