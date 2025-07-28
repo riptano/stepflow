@@ -1,0 +1,105 @@
+# Simplified LangChain workflow demonstrating registry and direct components
+# This workflow doesn't use the UDF approach to isolate the working components
+
+input_schema:
+  type: object
+  properties:
+    text:
+      type: string
+      description: "Text to analyze and process"
+    numbers:
+      type: array
+      items:
+        type: number
+      description: "Numbers for mathematical operations"
+
+output_schema:
+  type: object
+  properties:
+    text_analysis:
+      type: object
+    sentiment:
+      type: object
+    math_results:
+      type: object
+    direct_component_demo:
+      type: object
+
+steps:
+  # Approach 1: Using registry components (@server.langchain_component decorator)
+  - id: analyze_text
+    component: /text_analyzer
+    input:
+      input:
+        text:
+          $from:
+            workflow: input
+          path: text
+      execution_mode: invoke
+
+  - id: classify_sentiment
+    component: /sentiment_classifier
+    input:
+      input:
+        text:
+          $from:
+            workflow: input
+          path: text
+
+  - id: math_operations
+    component: /math_operations
+    input:
+      input:
+        a: 10
+        b: 3
+
+  # Approach 3: Direct /langchain/invoke component demo
+  # This demonstrates the capability using the demo component 
+  - id: prepare_direct_langchain_demo
+    component: /demo_direct_langchain
+    input:
+      operation: calculate_stats
+      data:
+        numbers:
+          $from:
+            workflow: input
+          path: numbers
+
+output:
+  text_analysis:
+    $from:
+      step: analyze_text
+
+  sentiment:
+    $from:
+      step: classify_sentiment
+
+  math_results:
+    $from:
+      step: math_operations
+    
+  direct_component_demo:
+    $from:
+      step: prepare_direct_langchain_demo
+
+test:
+  cases:
+    - name: simple_langchain_integration
+      input:
+        text: "This is a great example of LangChain integration!"
+        numbers: [1, 2, 3, 4, 5]
+      output:
+        outcome: success
+        result:
+          text_analysis:
+            word_count: 8
+            char_count: 49
+          sentiment:
+            sentiment: positive
+          math_results:
+            sum: 13
+            product: 30
+            power: 1000
+          direct_component_demo:
+            operation: calculate_stats
+            runnable_ready: true
