@@ -67,7 +67,7 @@ steps:
     input:
       text: { $from: { workflow: input }, path: "user_text" }
       model_name: { $from: { step: content_analysis }, path: "suggested_text_model" }
-    skip_if: { $from: { step: content_analysis }, path: "no_text" }
+    skipIf: { $from: { step: content_analysis }, path: "no_text" }
 
   # Step 4: Generate text response based on sentiment
   - id: text_generation
@@ -80,7 +80,7 @@ steps:
       max_length: 150
       temperature: 0.7
       sentiment_analysis: { $from: { step: sentiment_analysis } }
-    skip_if:
+    skipIf:
       $from: { workflow: input }
       path: "not_fast"
 
@@ -91,7 +91,7 @@ steps:
       image_data: { $from: { workflow: input }, path: "user_image" }
       model_name: { $from: { step: content_analysis }, path: "suggested_vision_model" }
       top_k: 5
-    skip_if:
+    skipIf:
       $from: { step: content_analysis }
       path: "no_image"
     on_error:
@@ -103,8 +103,7 @@ steps:
     component: /models/vision/analyze_image_metrics
     input:
       image_data: { $from: { workflow: input }, path: "user_image" }
-    depends_on: [image_classification]
-    skip_if:
+    skipIf:
       $from: { step: content_analysis }
       path: "no_image"
 
@@ -119,7 +118,7 @@ steps:
       model_name: "distilbert-sentiment"
       task: "sentiment"
       batch_size: { $from: { workflow: input }, path: "batch_size" }
-    skip_if:
+    skipIf:
       $from: { step: content_analysis }
       path: "not_batch"
 
@@ -127,6 +126,11 @@ steps:
   - id: final_results
     component: /eval
     input:
+      input: { $from: { workflow: input } }
+      sentiment_analysis: { $from: { step: sentiment_analysis } }
+      text_generation: { $from: { step: text_generation } }
+      image_classification: { $from: { step: image_classification } }
+      image_analysis: { $from: { step: image_analysis } }
       expression: |
         {
           "processing_summary": {
