@@ -42,7 +42,7 @@ steps:
       action: skip  # Vision is optional
 
   # Step 2: Analyze user input to determine optimal processing strategy
-  - id: content_analyis_udf
+  - id: content_analysis_udf
     component: /put_blob
     input:
       data:
