@@ -49,7 +49,7 @@ steps:
         code: |
           {
             "no_text": len(input.user_text) == 0,
-            "no_image": input.user_image == null,
+            "no_image": input.user_image == null or len(input.user_image) == 0,
             "prefer_gpu": input.prefer_gpu,
             "processing_mode": input.processing_mode,
             "not_fast": input.processing_mode != "fast",
