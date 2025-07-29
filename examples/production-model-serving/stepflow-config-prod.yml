@@ -30,7 +30,7 @@ plugins:
     # url: "https://text-models.production.company.com"
     # with load balancing, SSL termination, and service discovery
 
-  # Vision Models Server Cluster - HTTP-based communication  
+  # Vision Models Server Cluster - HTTP-based communication
   # Points to GPU-enabled instances optimized for computer vision workloads
   # These might run on different instance types with specialized hardware
   vision_models_cluster:
@@ -58,6 +58,12 @@ routes:
   "/models/vision/{*component}":
     - plugin: vision_models_cluster
 
+  # Route basic Python requests to the text models server
+  # This allows basic Python components to be handled by the text model server.
+  # We could have a separate pool of servers for Python components if needed.
+  "/python/{*component}":
+    - plugin: text_models_cluster
+
   # Fallback to built-in components for core workflow functionality
   "/{*component}":
     - plugin: builtin
@@ -74,7 +80,7 @@ stateStore:
   maxConnections: 20  # Higher connection pool for production load
 
 # Production considerations not shown in this demo config:
-# 
+#
 # 1. **Authentication & Authorization**:
 #    - API keys, OAuth tokens, or mutual TLS for service-to-service auth
 #    - Role-based access control for different model tiers

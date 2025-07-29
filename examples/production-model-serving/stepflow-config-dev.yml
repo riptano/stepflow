@@ -58,6 +58,10 @@ routes:
   "/models/vision/{*component}":
     - plugin: vision_models
 
+  # Route basic Python requests to the text models server to.
+  "/python/{*component}":
+    - plugin: text_models
+
   # Route all other components to built-in implementations
   "/{*component}":
     - plugin: builtin

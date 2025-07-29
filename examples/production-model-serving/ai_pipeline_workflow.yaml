@@ -42,17 +42,24 @@ steps:
       action: skip  # Vision is optional
 
   # Step 2: Analyze user input to determine optimal processing strategy
-  - id: content_analysis
-    component: /eval
+  - id: content_analyis_udf
+    component: /put_blob
     input:
-      expression: |
-        {
-          "has_image": false,
-          "text_length": len(input.user_text),
-          "suggested_text_model": input.prefer_gpu && text_health_check.gpu_available ? "gpt2-small" : "distilbert-sentiment",
-          "suggested_vision_model": input.prefer_gpu ? "resnet-imagenet" : "deit-efficient",
-          "use_batch_processing": input.processing_mode == "batch" || len(input.user_text.split("\n")) > 1
-        }
+      data:
+        code: |
+          {
+            "no_text": len(input.user_text) == 0,
+            "no_image": input.user_image == null,
+            "prefer_gpu": input.prefer_gpu,
+            "processing_mode": input.processing_mode,
+            "not_fast": input.processing_mode != "fast",
+            "not_batch": input.processing_mode != "batch",
+          }
+  - id: content_analysis
+    component: /python/udf
+    input:
+      blob_id: { $from: { step: content_analysis_udf }, path: "blob_id" }
+      input: { $from: { workflow: input } }
 
   # Step 3: Process text content with sentiment analysis
   - id: sentiment_analysis
@@ -60,11 +67,7 @@ steps:
     input:
       text: { $from: { workflow: input }, path: "user_text" }
       model_name: { $from: { step: content_analysis }, path: "suggested_text_model" }
-    condition:
-      $from: { step: content_analysis }
-      path: "text_length"
-      operator: ">"
-      value: 0
+    skip_if: { $from: { step: content_analysis }, path: "no_text" }
 
   # Step 4: Generate text response based on sentiment
   - id: text_generation
@@ -76,12 +79,10 @@ steps:
       model_name: "gpt2-small"
       max_length: 150
       temperature: 0.7
-    depends_on: [sentiment_analysis]
-    condition:
+      sentiment_analysis: { $from: { step: sentiment_analysis } }
+    skip_if:
       $from: { workflow: input }
-      path: "processing_mode"
-      operator: "!="
-      value: "fast"
+      path: "not_fast"
 
   # Step 5: Process image if provided
   - id: image_classification
@@ -90,11 +91,9 @@ steps:
       image_data: { $from: { workflow: input }, path: "user_image" }
       model_name: { $from: { step: content_analysis }, path: "suggested_vision_model" }
       top_k: 5
-    condition:
+    skip_if:
       $from: { step: content_analysis }
-      path: "has_image"
-      operator: "=="
-      value: true
+      path: "no_image"
     on_error:
       action: skip
       message: "Image processing failed, continuing without image analysis"
@@ -105,11 +104,9 @@ steps:
     input:
       image_data: { $from: { workflow: input }, path: "user_image" }
     depends_on: [image_classification]
-    condition:
+    skip_if:
       $from: { step: content_analysis }
-      path: "has_image"
-      operator: "=="
-      value: true
+      path: "no_image"
 
   # Step 7: Demonstrate batch processing capabilities
   - id: batch_demo
@@ -122,11 +119,9 @@ steps:
       model_name: "distilbert-sentiment"
       task: "sentiment"
       batch_size: { $from: { workflow: input }, path: "batch_size" }
-    condition:
+    skip_if:
       $from: { step: content_analysis }
-      path: "use_batch_processing"
-      operator: "=="
-      value: true
+      path: "not_batch"
 
   # Step 8: Compile comprehensive results with performance metrics
   - id: final_results
