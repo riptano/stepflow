@@ -87,6 +87,9 @@ class StepflowServer:
     def __init__(self):
         self._components: dict[str, ComponentEntry] = {}
         self._initialized = False
+        
+        # Add LangChain registry functionality
+        self._add_langchain_support()
 
     def is_initialized(self) -> bool:
         """Check if the server is initialized."""
@@ -354,3 +357,19 @@ class StepflowServer:
 
         except Exception as e:
             raise StepflowExecutionError(f"Component execution failed: {str(e)}") from e
+
+    def _add_langchain_support(self):
+        """Add LangChain integration support to the server."""
+        try:
+            from stepflow_py.langchain_registry import add_langchain_component_method
+            from stepflow_py.langchain_components import register_langchain_components
+            
+            # Add the langchain_component decorator method
+            add_langchain_component_method(self.__class__)
+            
+            # Register built-in LangChain components
+            register_langchain_components(self)
+            
+        except ImportError:
+            # LangChain not available, skip adding support
+            pass

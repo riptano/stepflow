@@ -28,6 +28,14 @@ from .generated_protocol import (
 from .stdio_server import StepflowStdioServer
 from .value import JsonPath, StepReference, Valuable, Value, WorkflowInput
 
+# LangChain integration (optional)
+try:
+    from .langchain_udf import create_langchain_runnable_blob
+    from .langchain_registry import get_langchain_components, list_langchain_components
+    LANGCHAIN_AVAILABLE = True
+except ImportError:
+    LANGCHAIN_AVAILABLE = False
+
 __all__ = [
     # Core classes
     "StepflowStdioServer",
@@ -51,6 +59,14 @@ __all__ = [
     "OnSkipSkip",
     "OnSkipDefault",
 ]
+
+# Add LangChain exports if available
+if LANGCHAIN_AVAILABLE:
+    __all__.extend([
+        "create_langchain_runnable_blob",
+        "get_langchain_components", 
+        "list_langchain_components",
+    ])
 
 if __name__ == "__main__":
     from . import main
