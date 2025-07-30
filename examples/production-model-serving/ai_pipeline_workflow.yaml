@@ -46,14 +46,25 @@ steps:
     component: /put_blob
     input:
       data:
+        input_schema:
+          type: object
+          properties:
+            user_text:
+              type: string
+            user_image:
+              type: string
+            prefer_gpu:
+              type: boolean
+            processing_mode:
+              type: string
         code: |
-          {
-            "no_text": len(input.user_text) == 0,
-            "no_image": input.user_image == null or len(input.user_image) == 0,
-            "prefer_gpu": input.prefer_gpu,
-            "processing_mode": input.processing_mode,
-            "not_fast": input.processing_mode != "fast",
-            "not_batch": input.processing_mode != "batch",
+          return {
+              "no_text": len(input.user_text) == 0,
+              "no_image": input.user_image == null or len(input.user_image) == 0,
+              "prefer_gpu": input.prefer_gpu,
+              "processing_mode": input.processing_mode,
+              "not_fast": input.processing_mode != "fast",
+              "not_batch": input.processing_mode != "batch",
           }
   - id: content_analysis
     component: /python/udf
