@@ -1,5 +1,5 @@
 # Core StepFlow SDK
-stepflow-py>=0.2.3
+stepflow-py>=0.2.4
 
 # Machine Learning Libraries
 torch>=2.0.0

@@ -60,11 +60,12 @@ steps:
         code: |
           return {
               "no_text": len(input.user_text) == 0,
-              "no_image": input.user_image == null or len(input.user_image) == 0,
+              "no_image": len(input.get("user_image", None) or "") == 0,
               "prefer_gpu": input.prefer_gpu,
               "processing_mode": input.processing_mode,
               "not_fast": input.processing_mode != "fast",
               "not_batch": input.processing_mode != "batch",
+              "suggested_text_model": "flan-t5-small" if input.prefer_gpu else "gpt2-small",
           }
   - id: content_analysis
     component: /python/udf
